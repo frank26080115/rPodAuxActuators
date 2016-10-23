@@ -14,6 +14,7 @@ void comm_task()
 {
 	static enum {
 		STATE_WAITING,
+		STATE_MAGIC_2,
 		STATE_READING,
 	}
 	state = STATE_WAITING;
@@ -31,15 +32,31 @@ void comm_task()
 		return;
 	}
 
-	if (state == STATE_WAITING)
+	/*
+	if sync is lost, then simply send exactly 32 COMM_MAGIC to resync
+	*/
+
+	if (state == STATE_WAITING || state == STATE_MAGIC_2)
 	{
-		if (c == COMM_MAGIC) // got sync word
+		if (c == COMM_MAGIC_1) // got sync word
 		{
 			comm_buff_idx = 0; // so start for the first
 			comm_buffer[comm_buff_idx++] = c;
-			state = STATE_READING; // we have the sync word
+			state = STATE_MAGIC_2; // we have the sync word
 			tmr = systmr_nowMillis();
 			return;
+		}
+		else if (state == STATE_MAGIC_2 && c == COMM_MAGIC_2)
+		{
+			comm_buff_idx = 1;
+			comm_buffer[comm_buff_idx++] = c;
+			state = STATE_READING;
+			tmr = systmr_nowMillis();
+			return;
+		}
+		else
+		{
+			
 		}
 	}
 	else
@@ -85,7 +102,8 @@ void comm_send(uint8_t opcode, uint8_t* data, uint8_t len)
 	static uint8_t seq = 0x05;
 	static uint8_t outbuff[COMM_BUFF_SIZE];
 	commpkt_t* pkt = (commpkt_t*)outbuff;
-	pkt->magic = COMM_MAGIC;
+	pkt->magic_1 = COMM_MAGIC_1;
+	pkt->magic_2 = COMM_MAGIC_2;
 	pkt->seq = seq++;
 	pkt->opcode = opcode;
 	for (i = 0; i < len && i < COMM_PKT_DATA_SIZE; i++)
