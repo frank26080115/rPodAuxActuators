@@ -9,7 +9,7 @@
 typedef struct
 {
 	uint8_t magic;
-	uint8_t seq; // must increment or otherwise be different from previous
+	uint8_t seq; // must increment or otherwise be different from previous, this messes with the checksum so that we can reject a bad DMA
 	uint8_t opcode;
 	uint8_t data[COMM_PKT_DATA_SIZE];
 	uint16_t checksum; // fletcher16

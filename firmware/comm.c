@@ -73,6 +73,7 @@ void comm_handle()
 		return;
 	}
 	app_handleComm(pkt);
+	prev_seq = pkt->seq;
 }
 
 void comm_send(uint8_t opcode, uint8_t* data, uint8_t len)
@@ -85,7 +86,7 @@ void comm_send(uint8_t opcode, uint8_t* data, uint8_t len)
 	static uint8_t outbuff[COMM_BUFF_SIZE];
 	commpkt_t* pkt = (commpkt_t*)outbuff;
 	pkt->magic = COMM_MAGIC;
-	pkt->seq = seq;
+	pkt->seq = seq++;
 	pkt->opcode = opcode;
 	for (i = 0; i < len && i < COMM_PKT_DATA_SIZE; i++)
 	{
